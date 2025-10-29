@@ -1,3 +1,4 @@
+import { Navbar } from "@/components/navbar"
 import { HeroSection } from "@/components/hero-section"
 import { MemoryLane } from "@/components/memory-lane"
 import { TwentyThings } from "@/components/twenty-things"
@@ -14,14 +15,27 @@ export default async function Home() {
   const { data: memories } = await supabase.from("memories").select("*").order("created_at", { ascending: true })
 
   return (
-    <main className="min-h-screen">
-      <HeroSection />
-      <TwentyThings />
-      <MemoryLane initialMemories={memories || []} />
-      <BenjaminInNumbers />
-      <PolaroidWall />
-      <ScrollToTop />
-      <Footer />
-    </main>
+    <>
+      <Navbar />
+      <main className="min-h-screen pt-20">
+        <section id="hero">
+          <HeroSection />
+        </section>
+        <section id="twenty-things">
+          <TwentyThings />
+        </section>
+        <section id="memories">
+          <MemoryLane initialMemories={memories || []} />
+        </section>
+        <section id="numbers">
+          <BenjaminInNumbers />
+        </section>
+        <section id="gallery">
+          <PolaroidWall />
+        </section>
+        <ScrollToTop />
+        <Footer />
+      </main>
+    </>
   )
 }

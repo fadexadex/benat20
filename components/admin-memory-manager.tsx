@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2, Upload } from "lucide-react"
+import { Plus, Trash2, Upload, Pencil, Save, X } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
@@ -28,6 +28,7 @@ interface AdminMemoryManagerProps {
 export function AdminMemoryManager({ initialMemories }: AdminMemoryManagerProps) {
   const [memories, setMemories] = useState<Memory[]>(initialMemories)
   const [isAdding, setIsAdding] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [quote, setQuote] = useState("")
   const [mediaUrl, setMediaUrl] = useState("")
@@ -104,6 +105,46 @@ export function AdminMemoryManager({ initialMemories }: AdminMemoryManagerProps)
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete memory")
+    }
+  }
+
+  const handleStartEdit = (memory: Memory) => {
+    setEditingId(memory.id)
+    setName(memory.name)
+    setQuote(memory.quote)
+    setMediaUrl(memory.media_url)
+    setMediaType(memory.media_type as "image" | "video")
+    setIsAdding(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setName("")
+    setQuote("")
+    setMediaUrl("")
+    setMediaType("image")
+  }
+
+  const handleUpdateMemory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingId) return
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/memories/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, quote, media_url: mediaUrl, media_type: mediaType }),
+      })
+
+      if (!response.ok) throw new Error("Failed to update memory")
+
+      const updatedMemory = await response.json()
+      setMemories(memories.map((m) => (m.id === editingId ? updatedMemory : m)))
+      handleCancelEdit()
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update memory")
     }
   }
 
@@ -188,19 +229,93 @@ export function AdminMemoryManager({ initialMemories }: AdminMemoryManagerProps)
         {memories.map((memory) => (
           <Card key={memory.id}>
             <CardContent className="p-4">
-              <div className="relative aspect-square rounded-lg overflow-hidden mb-4">
-                {memory.media_type === "video" ? (
-                  <video src={memory.media_url} className="w-full h-full object-cover" />
-                ) : (
-                  <Image src={memory.media_url || "/placeholder.svg"} alt={memory.name} fill className="object-cover" />
-                )}
-              </div>
-              <h3 className="font-semibold text-lg mb-2">{memory.name}</h3>
-              <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{memory.quote}</p>
-              <Button variant="destructive" size="sm" onClick={() => handleDeleteMemory(memory.id)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
+              {editingId === memory.id ? (
+                <form onSubmit={handleUpdateMemory} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={`edit-name-${memory.id}`}>Name</Label>
+                    <Input
+                      id={`edit-name-${memory.id}`}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Who is this memory from?"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`edit-quote-${memory.id}`}>Memory / Quote</Label>
+                    <Textarea
+                      id={`edit-quote-${memory.id}`}
+                      value={quote}
+                      onChange={(e) => setQuote(e.target.value)}
+                      placeholder="Share a special memory or message..."
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`edit-media-${memory.id}`}>Upload Image or Video</Label>
+                    <div className="flex items-center gap-4">
+                      <Input
+                        id={`edit-media-${memory.id}`}
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={handleFileUpload}
+                        disabled={isUploading}
+                      />
+                      {isUploading && <span className="text-sm text-muted-foreground">Uploading...</span>}
+                    </div>
+                    {mediaUrl && (
+                      <div className="mt-2 relative w-32 h-32 rounded-lg overflow-hidden">
+                        {mediaType === "video" ? (
+                          <video src={mediaUrl} className="w-full h-full object-cover" />
+                        ) : (
+                          <Image src={mediaUrl || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm" disabled={!mediaUrl || isUploading}>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={handleCancelEdit}>
+                      <X className="mr-2 h-4 w-4" />
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="relative aspect-square rounded-lg overflow-hidden mb-4">
+                    {memory.media_type === "video" ? (
+                      <video src={memory.media_url} className="w-full h-full object-cover" />
+                    ) : (
+                      <Image
+                        src={memory.media_url || "/placeholder.svg"}
+                        alt={memory.name}
+                        fill
+                        className="object-cover"
+                      />
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2">{memory.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{memory.quote}</p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleStartEdit(memory)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteMemory(memory.id)}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         ))}

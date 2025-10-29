@@ -17,7 +17,7 @@ export function HeroSection() {
 
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-background via-secondary/20 to-accent/30" />
+      <div className="absolute inset-0 -z-10 bg-linear-to-br from-background via-secondary/20 to-accent/30" />
 
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none">
@@ -47,7 +47,7 @@ export function HeroSection() {
         <div
           className={`relative transition-all duration-1000 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}
         >
-          <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative aspect-3/4 rounded-2xl overflow-hidden shadow-2xl">
             <Image
               src="/images/design-mode/daa5ffce-ad2d-4750-9b87-8416c9b612a8.JPG.jpeg"
               alt="Benjamin"
@@ -55,7 +55,7 @@ export function HeroSection() {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-primary/20 to-transparent" />
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export function HeroSection() {
           className={`text-center md:text-left transition-all duration-1000 delay-300 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
         >
           <h1 className="mb-4 text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl text-balance">
-            <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
               Happy 20th,
             </span>
           </h1>
